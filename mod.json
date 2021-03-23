@@ -1,0 +1,12 @@
+{
+	"Name": "MapLoader",
+	"Authors": ["Powback"],
+	"Description": "Load custom levels created using MapEditor",
+	"URL": "https://github.com/BF3RM/MapLoader",
+	"Version": "1.0.0",
+	"HasWebUI": false,
+	"HasVeniceEXT": true,
+	"Dependencies": {
+        "veniceext": "^1.0.0"
+    }
+}
