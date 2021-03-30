@@ -234,3 +234,51 @@ if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
 	customRegistry = customRegistry or RegistryContainer(customRegistryGuid)
 	ResourceManager:AddRegistry(customRegistry, ResourceCompartment.ResourceCompartment_Game)
 end)
+
+
+---Bundles
+
+
+Events:Subscribe('Level:LoadResources', function()
+if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
+        return
+    end
+		print('Mounting XP3 Chunks...')
+        ResourceManager:MountSuperBundle('xp3chunks')
+		print('Mounting XP1 Chunks...')
+        ResourceManager:MountSuperBundle('xp1chunks')
+		print('Mounting Alborz Chunks...')
+        ResourceManager:MountSuperBundle('levels/xp3_alborz/xp3_alborz')
+		print('Mounting Shield Chunks...')
+        ResourceManager:MountSuperBundle('levels/xp3_Shield/xp3_Shield')
+		print('Mounting Wake Chunks...')
+        ResourceManager:MountSuperBundle('levels/xp1_004/xp1_004')
+end)
+
+
+Hooks:Install('ResourceManager:LoadBundles', 500, function(hook, bundles, compartment)
+if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
+        return
+    end
+
+
+        if #bundles == 1 and bundles[1] == SharedUtils:GetLevelName() then
+            print('Only loading \''..bundles[1]..'\', injecting bundles...')
+
+            bundles = {
+			    'levels/xp3_Shield/xp3_Shield', -- xp3_Shield
+				'levels/xp3_alborz/xp3_alborz', -- xp3_alborz
+				'levels/xp1_004/xp1_004', -- xp1_003
+                bundles[1],
+            }
+
+            hook:Pass(bundles, compartment)
+
+        else
+
+            i = #bundles
+            print('Loading additional bundle \''..bundles[i]..'\'...')
+
+        end
+
+end)
