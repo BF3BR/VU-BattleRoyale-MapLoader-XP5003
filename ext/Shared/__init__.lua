@@ -1,3 +1,9 @@
+GameObjectOriginType = {
+	Vanilla = 1,
+	Custom = 2,
+	CustomChild = 3
+}
+
 -- Stores LevelData DataContainer.
 local PrimaryLevel = nil
 
@@ -9,6 +15,7 @@ local indexCount = 0
 local customRegistryGuid = Guid('5FAD87FD-9934-4D44-A5BE-7C5B38FCE6AF')
 local customRegistry = nil
 local worldPartRefIndex = nil
+local lastLoadedMap = nil
 
 local function PatchOriginalObject(object, world)
 	if(object.originalRef == nil) then
@@ -108,14 +115,18 @@ local function CreateWorldPart()
 	print('indexCount is:')
 	print(indexCount)
 
-	for index, object in pairs(CustomLevelData.data) do
-		if(not object.isVanilla) then
-			if(not CustomLevelData.vanillaOnly) then
-				AddCustomObject(object, world)
+	if lastLoadedMap ~= SharedUtils:GetLevelName() then
+		for index, object in pairs(CustomLevelData.data) do
+			if object.origin == GameObjectOriginType.Custom then
+				if (not CustomLevelData.vanillaOnly) then
+					AddCustomObject(object, world)
+				end
+			elseif object.origin == GameObjectOriginType.Vanilla then
+				PatchOriginalObject(object, world)
 			end
-		else
-			PatchOriginalObject(object, world)
+			-- TODO handle CustomChild
 		end
+		lastLoadedMap = SharedUtils:GetLevelName()
 	end
 
 	local s_WorldPartReference = WorldPartReferenceObjectData()
@@ -129,9 +140,6 @@ local function CreateWorldPart()
 end
 
 Events:Subscribe('Partition:Loaded', function(p_Partition)
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 	if p_Partition == nil then
 		return
 	end
@@ -172,9 +180,6 @@ if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
 end)
 
 Events:Subscribe('Level:LoadingInfo', function(p_Info)
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 	if(p_Info == "Registering entity resources") then
 		if(not CustomLevelData) then
 			print("No custom level specified.")
@@ -198,18 +203,16 @@ if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
 end)
 
 Events:Subscribe('Level:Destroy', function()
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 	objectVariations = {}
 	pendingVariations = {}
 	indexCount = 0
+	-- TODO: Check if the next map is the same level (or gamemode)
 	if worldPartRefIndex ~= nil and PrimaryLevel ~= nil then
-		PrimaryLevel.objects:erase(worldPartRefIndex)
+	--	PrimaryLevel.objects:erase(worldPartRefIndex)
 	end
 
 	if refObjRegistryIndex ~= nil and PrimaryLevel ~= nil and PrimaryLevel.registryContainer ~= nil then
-		PrimaryLevel.registryContainer.referenceObjectRegistry:erase(refObjRegistryIndex)
+	--	PrimaryLevel.registryContainer.referenceObjectRegistry:erase(refObjRegistryIndex)
 	end
 	worldPartRefIndex = nil
 	refObjRegistryIndex = nil
@@ -219,34 +222,24 @@ if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
 end)
 
 Events:Subscribe('Level:LoadResources', function()
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 	print("Loading resources")
 	objectVariations = {}
 	pendingVariations = {}
 end)
 
 Events:Subscribe('Level:RegisterEntityResources', function(levelData)
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 	customRegistry = customRegistry or RegistryContainer(customRegistryGuid)
 	ResourceManager:AddRegistry(customRegistry, ResourceCompartment.ResourceCompartment_Game)
 end)
 
 
----Bundles
-
-
 Events:Subscribe('Level:LoadResources', function()
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
 		print('Mounting XP3 Chunks...')
         ResourceManager:MountSuperBundle('xp3chunks')
 		print('Mounting XP1 Chunks...')
         ResourceManager:MountSuperBundle('xp1chunks')
+		print('Mounting XP2 Chunks...')
+        ResourceManager:MountSuperBundle('xp2chunks')
 		print('Mounting Alborz Chunks...')
         ResourceManager:MountSuperBundle('levels/xp3_alborz/xp3_alborz')
 		print('Mounting Shield Chunks...')
@@ -257,10 +250,6 @@ end)
 
 
 Hooks:Install('ResourceManager:LoadBundles', 500, function(hook, bundles, compartment)
-if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
-        return
-    end
-
 
         if #bundles == 1 and bundles[1] == SharedUtils:GetLevelName() then
             print('Only loading \''..bundles[1]..'\', injecting bundles...')
@@ -282,7 +271,6 @@ if SharedUtils:GetLevelName() ~= 'Levels/XP5_003/XP5_003' then
         end
 
 end)
-
 
 -- 2D tree removal
 
@@ -425,4 +413,3 @@ function CreateParamaterIndexMap(parameters)
 
 	return indexMap
 end
-
